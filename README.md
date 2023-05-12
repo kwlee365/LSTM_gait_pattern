@@ -1,0 +1,1 @@
+# LSTM_gait_pattern

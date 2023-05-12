@@ -1,0 +1,73 @@
+# In[] Start
+
+import os
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
+
+import numpy as np
+import pandas as pd
+import pickle, time, os, tensorflow, sys
+from utils import preprocessing as preProc
+from utils import lstm_model
+
+import logging
+tensorflow.get_logger().setLevel(logging.INFO)
+
+COLS_X = [0, 1, 2, 3, 4, 5]
+COLS_Y = [6]
+LSTM_WINDOW_LEFT = 15
+LSTM_WINDOW_RIGHT = 15
+SENSORS = ['lin_acc_x','lin_acc_y','lin_acc_z','ang_vel_x','ang_vel_y','ang_vel_z']
+Label = 'Label'
+
+csv_reader = pd.read_csv('datasets/train_dataset.csv', encoding = 'utf-8')
+print(csv_reader)
+   
+train_set_X = []
+
+for i in SENSORS:
+    train_set_X.append(csv_reader[i].to_list())
+    
+train_set_y = csv_reader[Label].to_list()
+train_set_y = np.array(train_set_y)
+
+train_set_X = np.array(train_set_X)
+train_set_X = np.reshape(train_set_X, (train_set_X.shape[1], train_set_X.shape[0]))  
+
+print('train_set_X', train_set_X)
+print('len(train_set_X)', len(train_set_X))
+print('train_set_y', train_set_y)
+print('len(train_set_y)', len(train_set_y))
+
+higher_bound = len(train_set_X)-LSTM_WINDOW_RIGHT
+X_train_total, y_train = preProc.dataset_vectorizing(train_set_X, train_set_y, LSTM_WINDOW_LEFT, LSTM_WINDOW_RIGHT, higher_bound)
+del train_set_X, train_set_y    # Clean up the memory from unnecessary variables
+
+print(X_train_total.shape[0],X_train_total.shape[1],X_train_total.shape[2])
+
+# higher_bound = len(test_set_X)-LSTM_WINDOW_RIGHT
+# X_test_total, y_test = preProc.dataset_vectorizing(test_set_X, test_set_y, LSTM_WINDOW_LEFT, LSTM_WINDOW_RIGHT, higher_bound)
+# del db_test, test_set_X, test_set_y
+    
+if tensorflow.config.list_physical_devices("GPU"):
+    strategy = tensorflow.distribute.MirroredStrategy() # set to MirroredStrategy
+    print("Strategy is set to MirroredStrategy")
+else:  
+    strategy = tensorflow.distribute.get_strategy() # set to the default strategy
+    print("Strategy is set to DefaultDistributionStrategy")
+
+with strategy.scope():  
+    
+    model = lstm_model.initialize_lstm_model(X_train_total)
+    model = lstm_model.compile_lstm_model(model)
+    monitor = lstm_model.set_monitor_lstm_model()
+    
+    model.summary()
+
+    ## Fit the model
+    time_start = time.localtime()
+    print(f"Model startet at: {time_start.tm_hour}:{time_start.tm_min}:{time_start.tm_sec}")
+    model_history = lstm_model.fit_lstm_model(model, X_train_total, y_train, X_train_total, y_train, monitor, 10)    
+    time_end = time.localtime()
+    print(f"Model finished at: {time_start.tm_hour}:{time_start.tm_min}:{time_start.tm_sec}")
+    
+# In[] end

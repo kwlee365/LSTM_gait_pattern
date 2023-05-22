@@ -16,11 +16,14 @@ def initialize_lstm_model(X_train_total):
     _NUM_OF_UNITS_HIDDEN_LAYER_4 = 30
     _NUM_OF_UNITS_OUTPUT_LAYER = 1
     _DROPOUT_PERCENT = 0.2
-    _INPUT_LAYER_ACTIVATION_METHOD = "relu"
-    _INPUT_LAYER_RECURRENT_ACTIVATION_METHOD = "relu"
-    _OUTPUT_LAYER_ACTIVATION_METHOD = "relu"
+    _INPUT_LAYER_ACTIVATION_METHOD = "tanh"
+    _INPUT_LAYER_RECURRENT_ACTIVATION_METHOD = "sigmoid"
+    _OUTPUT_LAYER_ACTIVATION_METHOD = "sigmoid"
 
     model = Sequential() # Define the model to be a Sequential one
+
+    # The structure of the mode is introduced in paper: https://www.mdpi.com/1424-8220/21/17/5749
+    # Add the Input layer: Layer 1
 
     # Add the Input layer: Layer 1
     model.add(LSTM(units=_NUM_OF_UNITS_INPUT_LAYER, activation=_INPUT_LAYER_ACTIVATION_METHOD, recurrent_activation=_INPUT_LAYER_RECURRENT_ACTIVATION_METHOD, return_sequences=True, input_shape=(X_train_total.shape[1], X_train_total.shape[2])))
@@ -65,7 +68,7 @@ def compile_lstm_model(
 
     return model
 
-def set_monitor_lstm_model(verbose=2, monitor="loss", patience=20):
+def set_monitor_lstm_model(verbose=1, monitor="loss", patience=20):
     # This function sets the monitors for the LSTM-Model
     from tensorflow.keras.callbacks import EarlyStopping
     monitor = EarlyStopping(
@@ -78,6 +81,7 @@ def set_monitor_lstm_model(verbose=2, monitor="loss", patience=20):
     return monitor
 
 def fit_lstm_model(model, X_train_total, y_train, X_test_total, y_test, monitor, epochs=100):
+    # This function fits the lastm model by using the given input data
     history = model.fit(
         X_train_total, y_train, validation_data=(X_test_total, y_test),
         callbacks=[monitor], epochs=epochs

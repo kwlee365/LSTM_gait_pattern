@@ -150,9 +150,6 @@ def dataset_vectorizing(data_set_X, data_set_y, LSTM_window_left, LSTM_window_ri
     X_data5 = []
     y_data = []
 
-    # LSTM_window_left + LSTM_window_right + 1 크기의 Column List를
-    # higher_bound - LSTM_window_left 만큼 붙여줌.
-    # len(X_data0) = higher_bound - LSTM_window_left
     for i in range(LSTM_window_left, higher_bound):
         X_data0.append(data_set_X[i-LSTM_window_left:i+LSTM_window_right+1, [0]].reshape(-1, 1)) 
         X_data1.append(data_set_X[i-LSTM_window_left:i+LSTM_window_right+1, [1]].reshape(-1, 1))
@@ -162,11 +159,8 @@ def dataset_vectorizing(data_set_X, data_set_y, LSTM_window_left, LSTM_window_ri
         X_data5.append(data_set_X[i-LSTM_window_left:i+LSTM_window_right+1, [5]].reshape(-1, 1))
         y_data.append(data_set_y[i]) 
 
-    # List 자료형을 array로 바꿔줌: 행렬
-    # 행렬을 텐서로 바꿔줌.
-    # X_data0.shape = (higher_bound - LSTM_window_left) x (LSTM_window_left + LSTM_window_right + 1) x 1
-    X_data0 = np.array(X_data0) # array: List 자료형을 array로 반환
-    X_data0 = np.reshape(X_data0, (X_data0.shape[0], X_data0.shape[1], 1))  # 2차원 행렬을 텐서로 변경
+    X_data0 = np.array(X_data0) 
+    X_data0 = np.reshape(X_data0, (X_data0.shape[0], X_data0.shape[1], 1))  
     X_data1 = np.array(X_data1)
     X_data1 = np.reshape(X_data1, (X_data1.shape[0], X_data1.shape[1], 1))
     X_data2 = np.array(X_data2)

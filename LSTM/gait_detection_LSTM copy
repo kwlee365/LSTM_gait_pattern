@@ -1,0 +1,94 @@
+# In[] Start
+
+import os
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
+
+import numpy as np
+import pandas as pd
+import pickle, time, os, tensorflow, sys
+from utils import preprocessing as preProc
+from utils import lstm_model
+
+import logging
+tensorflow.get_logger().setLevel(logging.INFO)
+
+COLS_X = [0]
+COLS_Y = [1]
+LSTM_WINDOW_LEFT = 15
+LSTM_WINDOW_RIGHT = 15
+SENSORS = ['q']
+Label = 'Label'
+
+# In[] Read csv
+
+csv_reader = pd.read_csv('datasets/train_dataset.csv', encoding = 'utf-8')
+   
+train_set_X = []
+
+for i in SENSORS:
+    train_set_X.append(csv_reader[i].to_list())
+    
+train_set_y = csv_reader[Label].to_list()
+train_set_y = np.array(train_set_y)
+
+train_set_X = np.array(train_set_X)
+train_set_X = np.reshape(train_set_X, (train_set_X.shape[1], train_set_X.shape[0]))  
+
+print('train_set_X', train_set_X)
+print('len(train_set_X)', len(train_set_X))
+print('train_set_y', train_set_y)
+print('len(train_set_y)', len(train_set_y))
+
+# In[] Vectorizing
+
+higher_bound = len(train_set_X)-LSTM_WINDOW_RIGHT
+
+import numpy as np
+
+X_data = []
+y_data = []
+
+for i in range(LSTM_WINDOW_LEFT, higher_bound):
+    X_data.append(train_set_X[i-LSTM_WINDOW_LEFT:i+LSTM_WINDOW_RIGHT+1, [0]].reshape(-1, 1)) 
+    y_data.append(train_set_y[i]) 
+
+X_data = np.array(X_data) 
+X_data = np.reshape(X_data, (X_data.shape[0], X_data.shape[1], 1))  
+y_train = np.array(y_data)
+
+# X_data_total.shape = (higher_bound - LSTM_window_left) x (LSTM_window_left + LSTM_window_right + 1) x 3
+X_train_total = X_data
+
+del train_set_X, train_set_y    # Clean up the memory from unnecessary variables
+
+print(X_train_total.shape[0],X_train_total.shape[1],X_train_total.shape[2])
+
+# In[] LSTM
+
+# higher_bound = len(test_set_X)-LSTM_WINDOW_RIGHT
+# X_test_total, y_test = preProc.dataset_vectorizing(test_set_X, test_set_y, LSTM_WINDOW_LEFT, LSTM_WINDOW_RIGHT, higher_bound)
+# del db_test, test_set_X, test_set_y
+    
+if tensorflow.config.list_physical_devices("GPU"):
+    strategy = tensorflow.distribute.MirroredStrategy() # set to MirroredStrategy
+    print("Strategy is set to MirroredStrategy")
+else:  
+    strategy = tensorflow.distribute.get_strategy() # set to the default strategy
+    print("Strategy is set to DefaultDistributionStrategy")
+
+with strategy.scope():  
+    
+    model = lstm_model.initialize_lstm_model(X_train_total)
+    model = lstm_model.compile_lstm_model(model)
+    monitor = lstm_model.set_monitor_lstm_model()
+    
+    model.summary()
+
+    ## Fit the model
+    time_start = time.localtime()
+    print(f"Model startet at: {time_start.tm_hour}:{time_start.tm_min}:{time_start.tm_sec}")
+    model_history = lstm_model.fit_lstm_model(model, X_train_total, y_train, X_train_total, y_train, monitor, 10)    
+    time_end = time.localtime()
+    print(f"Model finished at: {time_start.tm_hour}:{time_start.tm_min}:{time_start.tm_sec}")
+    
+# In[] end

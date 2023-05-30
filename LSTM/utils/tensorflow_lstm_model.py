@@ -44,18 +44,31 @@ def compile_lstm_model(
     # This function set the optimization parameters to compile the LSTM-Model
     from tensorflow.keras.optimizers import Adam
     if optimization_option == "adam":
-        optimization_option = Adam(learning_rate=1e-3)
+        optimization_option = Adam(learning_rate=0.0005)
 
     model.compile(optimizer=optimization_option,
                   loss=loss_function, metrics=metrics)
 
     return model
 
+def set_monitor_ReduceLROnPlateau(monitor="loss", patience=5):
+    
+    from tensorflow.keras.callbacks import ReduceLROnPlateau
 
-def set_monitor_lstm_model(verbose=1, monitor="loss", patience=100):
-    # This function sets the monitors for the LSTM-Model
+    monitor = ReduceLROnPlateau(
+        monitor=monitor, 
+        factor=0.2, 
+        patience=patience, 
+        mode="auto",
+        min_lr=1e-7,
+    )
+    
+    return monitor
+
+def set_monitor_EarlyStopping(verbose=1, monitor="loss", patience=5):
+    
     from tensorflow.keras.callbacks import EarlyStopping
-
+    
     monitor = EarlyStopping(
         monitor=monitor,
         patience=patience,
@@ -63,18 +76,20 @@ def set_monitor_lstm_model(verbose=1, monitor="loss", patience=100):
         mode="auto",
         restore_best_weights=True
     )
+    
     return monitor
 
 
-def fit_lstm_model(model, X_train, Y_train, X_test, Y_test, monitor, epochs=10):
+def fit_lstm_model(model, X_train, Y_train, X_test, Y_test, monitor1, monitor2, epochs=10):
     # This function fits the lastm model by using the given input data
     history = model.fit(
         X_train,
         Y_train,
         epochs=epochs,
-        batch_size=32,
+        batch_size=128,
+        shuffle=True,
         validation_data=(X_test, Y_test),
-        callbacks=[monitor]
+        callbacks=[monitor1, monitor2]
     )
     return history
 # %%

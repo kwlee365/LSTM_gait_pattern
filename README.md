@@ -13,3 +13,7 @@ etc.
 1. fit_transform vs transform: https://deepinsight.tistory.com/165
 2. return sequence: https://tykimos.github.io/2017/04/09/RNN_Getting_Started/
 3. activation function: https://yeomko.tistory.com/39
+
+## train loss가 튀는 현상이 발생. (20230531)
+1. Batch size 32에서 64로 증가
+2. Adams Learning rate 0.001에서 0.0005로 감소. 

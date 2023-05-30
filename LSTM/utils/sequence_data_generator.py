@@ -1,17 +1,26 @@
-import numpy as np
+def dataset_generator(file_name, FEATURE, LABEL, WINDOW):
+    import numpy as np
+    import pandas as pd
+    import matplotlib.pyplot as plt
 
-def make_train_and_test_dataset(X, Y, a):
+    csv_reader = pd.read_csv(file_name, encoding='utf-8')
+    
+    # plt.title('Gait pattern segmentation')
+    # plt.xlabel('time')
+    # plt.grid()
+    # plt.xlim([0, 1000])
+    # plt.plot(csv_reader['leg_gyro_z'])
+    # plt.plot(csv_reader['Label']/100)
+    # plt.legend(('leg_gyro_z', 'Label'))
+    # plt.show()
 
-    split = int(len(X)* (1.0 - a))
+    feature = pd.DataFrame(csv_reader, columns=FEATURE).to_numpy().astype(float)
+    label = pd.DataFrame(csv_reader, columns=LABEL).to_numpy().astype(float)
 
-    X_train = X[0:split]
-    Y_train = Y[0:split]
-
-    X_test = X[split:]
-    Y_test = Y[split:]
-
-    return X_train, Y_train, X_test, Y_test
-
+    feature, label = make_sequene_dataset(feature, label, WINDOW)
+    
+    return feature, label
+    
 def make_sequene_dataset(feature, label, window_size):
     
     import numpy as np

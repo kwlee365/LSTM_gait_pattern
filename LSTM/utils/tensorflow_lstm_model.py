@@ -39,7 +39,7 @@ def compile_lstm_model(
         model,
         optimization_option="adam",
         loss_function="CategoricalCrossentropy",
-        metrics=["CategoricalAccuracy"]
+        metrics=["accuracy"]
 ):
     # This function set the optimization parameters to compile the LSTM-Model
     from tensorflow.keras.optimizers import Adam
@@ -52,7 +52,7 @@ def compile_lstm_model(
     return model
 
 
-def set_monitor_lstm_model(verbose=1, monitor="loss", patience=10):
+def set_monitor_lstm_model(verbose=1, monitor="loss", patience=100):
     # This function sets the monitors for the LSTM-Model
     from tensorflow.keras.callbacks import EarlyStopping
 

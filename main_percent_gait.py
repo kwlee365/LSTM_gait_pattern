@@ -50,7 +50,7 @@ num_classes = 100
 num_layers = 2
 
 learning_rate = 0.0005
-num_epochs = 100
+num_epochs = 20
 batch_size = 256
 
 Y_train_label = F.one_hot(Y_train_tensor.to(torch.int64), num_classes=num_classes).reshape(-1, num_classes)

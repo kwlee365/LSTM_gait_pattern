@@ -50,7 +50,7 @@ num_classes = 100
 num_layers = 2
 
 learning_rate = 0.0005
-num_epochs = 20
+num_epochs = 200
 batch_size = 256
 
 Y_train_label = F.one_hot(Y_train_tensor.to(torch.int64), num_classes=num_classes).reshape(-1, num_classes)
@@ -76,9 +76,8 @@ class GaitLSTM(nn.Module):
                 self.num_classes = num_classes
                 self.num_layers = num_layers
                 
-                self.lstm = nn.LSTM(input_dim, hidden_dim, num_layers = num_layers, batch_first = True)
-                self.bn = nn.BatchNorm1d(hidden_dim)
-                self.dropout = nn.Dropout(p=0.2)
+                self.lstm = nn.LSTM(input_dim, hidden_dim, num_layers = num_layers, dropout = 0.2, batch_first = True)
+                self.tanh = nn.Tanh()
                 self.fc = nn.Linear(hidden_dim, num_classes)
                                                 
         def forward(self, x):
@@ -88,10 +87,8 @@ class GaitLSTM(nn.Module):
 
                 # Decode the hidden state of the last time step.
                 out, _ = self.lstm(x, (h0, c0))
-                out = self.dropout(out)
-                # out = self.bn(out)
+                self.tanh = nn.Tanh()
                 out = self.fc(out[:, -1 ,:])
-                # out = F.softmax(out, dim=1)   
                 
                 return out
         
@@ -104,11 +101,17 @@ optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 # Train the model
 total_step = len(train_loader)
 train_hist = np.zeros(num_epochs)
+
+best_loss = 10 ** 9 
+patience_limit = 3 
+patience_check = 0 
+
 print("-------------------------------------------------")
 print("----------------------Train----------------------")
 print("-------------------------------------------------")
 for epoch in range(num_epochs):
         avg_cost = 0
+        val_loss = 0
         
         for i, (x, labels) in enumerate(train_loader):
                 x = x.reshape(-1, sequence_length, input_dim).to(device)
@@ -124,10 +127,21 @@ for epoch in range(num_epochs):
                 optimizer.step()
                 
                 avg_cost += loss/total_step
+                val_loss += loss.item()
                 
                 if (i+1) % 100 == 0: 
                         print('Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}'
                               .format(epoch+1, num_epochs, i+1, total_step, loss.item()))
+        
+        if val_loss > best_loss: 
+                patience_check += 1
+
+                if patience_check >= patience_limit:
+                        print("-------------Early Stopping is activated-------------") 
+                        break
+        else:
+                best_loss = val_loss
+                patience_check = 0
                         
         train_hist[epoch] = avg_cost
         

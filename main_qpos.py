@@ -166,7 +166,9 @@ with torch.no_grad():
         for x, labels in test_loader:
                 x = x.reshape(-1, sequence_length, input_dim).to(device)
                 labels= labels.float().to(device)
-                # labels= labels.reshape(-1, num_classes).float().to(device)
+                
+                print(x.shape)
+                print(labels.shape)
                 
                 outputs = model(x)
                 total += labels.size(0)
@@ -181,5 +183,5 @@ plt.legend()
 plt.show()
                 
 #Save the model checkpoint
-torch.save(model.state_dict(), 'model.ckpt')
+torch.save(model.state_dict(), 'model_qpos.ckpt')
         

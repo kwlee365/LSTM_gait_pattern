@@ -28,7 +28,6 @@ TRAINSET = ['data/train_walking_data_exp1.csv',
 TESTSET  = 'data/test_walking_data.csv'
 
 WINDOW = 500
-
 X_train1, Y_train1 = SeqDataGenerator.dataset_generator(TRAINSET[0], FEATURE, LABEL, WINDOW)
 X_train2, Y_train2 = SeqDataGenerator.dataset_generator(TRAINSET[1], FEATURE, LABEL, WINDOW)
 X_train3, Y_train3 = SeqDataGenerator.dataset_generator(TRAINSET[2], FEATURE, LABEL, WINDOW)
@@ -50,7 +49,7 @@ num_classes = 100
 num_layers = 2
 
 learning_rate = 0.0005
-num_epochs = 200
+num_epochs = 100
 batch_size = 256
 
 Y_train_label = F.one_hot(Y_train_tensor.to(torch.int64), num_classes=num_classes).reshape(-1, num_classes)
@@ -87,8 +86,8 @@ class GaitLSTM(nn.Module):
 
                 # Decode the hidden state of the last time step.
                 out, _ = self.lstm(x, (h0, c0))
-                self.tanh = nn.Tanh()
-                out = self.fc(out[:, -1 ,:])
+                out = self.tanh(out[:, -1 ,:])
+                out = self.fc(out)
                 
                 return out
         
@@ -191,5 +190,5 @@ plt.legend()
 plt.show()
                 
 #Save the model checkpoint
-# torch.save(model.state_dict(), 'model.ckpt')
+torch.save(model.state_dict(), 'model_percent_gait.ckpt')
         

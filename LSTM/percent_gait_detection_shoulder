@@ -14,30 +14,32 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 tf.get_logger().setLevel(logging.INFO)
 
-DATA = ['Time', 'q', 'qdot',
-        'pelv_gyro_x', 'pelv_gyro_y', 'pelv_gyro_z',
-        'pelv_acc_x', 'pelv_acc_y', 'pelv_acc_z',
-        'leg_gyro_x', 'leg_gyro_y', 'leg_gyro_z',
-        'leg_acc_x', 'leg_acc_y', 'leg_acc_z']
+## Data processing
+FEATURE = ['right_shoulder_ang_x', 'right_shoulder_ang_y', 'right_shoulder_ang_z',
+           'right_shoulder_acc_x', 'right_shoulder_acc_y', 'right_shoulder_acc_z',
+           'left_shoulder_ang_x', 'left_shoulder_ang_y', 'left_shoulder_ang_z',
+           'left_shoulder_acc_x', 'left_shoulder_acc_y', 'left_shoulder_acc_z']
 
-FEATURE = ['leg_gyro_x', 'leg_gyro_y', 'leg_gyro_z',
-           'leg_acc_x', 'leg_acc_y', 'leg_acc_z']
-
+# LABEL = ['right_q', 'left_q']
 LABEL = ['Label']
 
-TRAINSET = ['datasets/train_walking_data_exp1.csv', 
-            'datasets/train_walking_data_exp2.csv', 
-            'datasets/train_walking_data_exp3.csv']
-TESTSET  = 'datasets/test_walking_data.csv'
+TRAINSET = ['/home/kwan/LSTM_gait_pattern/LSTM/data/shoulder/CShoulder.csv',
+            '/home/kwan/LSTM_gait_pattern/LSTM/data/shoulder/DShoulder.csv',
+            '/home/kwan/LSTM_gait_pattern/LSTM/data/shoulder/JShoulder.csv',
+            '/home/kwan/LSTM_gait_pattern/LSTM/data/shoulder/KShoulder.csv',
+            '/home/kwan/LSTM_gait_pattern/LSTM/data/shoulder/MShoulder.csv']
+TESTSET  = '/home/kwan/LSTM_gait_pattern/LSTM/data/shoulder/ShoulderTest.csv'
 
-WINDOW = 500
+WINDOW = 100
 
 X_train1, Y_train1 = SeqDataGenerator.dataset_generator(TRAINSET[0], FEATURE, LABEL, WINDOW)
 X_train2, Y_train2 = SeqDataGenerator.dataset_generator(TRAINSET[1], FEATURE, LABEL, WINDOW)
 X_train3, Y_train3 = SeqDataGenerator.dataset_generator(TRAINSET[2], FEATURE, LABEL, WINDOW)
+X_train4, Y_train4 = SeqDataGenerator.dataset_generator(TRAINSET[3], FEATURE, LABEL, WINDOW)
+X_train5, Y_train5 = SeqDataGenerator.dataset_generator(TRAINSET[4], FEATURE, LABEL, WINDOW)
 
-X_train = np.concatenate((X_train1, X_train2, X_train3), axis = 0)
-Y_train = np.concatenate((Y_train1, Y_train2, Y_train3), axis = 0)
+X_train = np.concatenate((X_train1, X_train2, X_train3, X_train4, X_train5), axis = 0)
+Y_train = np.concatenate((Y_train1, Y_train2, Y_train3, Y_train4, Y_train5), axis = 0)
 X_test, Y_test = SeqDataGenerator.dataset_generator(TESTSET, FEATURE, LABEL, WINDOW)
 
 #In[]
@@ -106,6 +108,7 @@ test = np.argmax(Y_test, axis=1)
 pred = np.argmax(pred, axis=1)
 
 mse = tf.keras.metrics.mean_squared_error(test, pred)
+print('mse')
 print(mse)
 
 plt.plot(test)
@@ -140,7 +143,7 @@ plt.show()
 #In[] Save model
 import pickle
 
-model.save(f"models//GaitLSTMModel.h5")
+model.save(f"models//ShoulderGaitLSTMModel.h5")
 
 ## Save the history
 with open(f"models//history.pkl", "wb") as output:

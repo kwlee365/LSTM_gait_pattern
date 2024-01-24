@@ -11,10 +11,10 @@ class GaitLSTM(nn.Module):
                 self.num_classes = num_classes
                 self.num_layers = num_layers
                 
-                self.lstm = nn.LSTM(input_dim, hidden_dim, num_layers = num_layers, dropout=0.2, batch_first = True)
+                self.lstm = nn.LSTM(input_dim, hidden_dim, num_layers = num_layers, dropout=0.1, batch_first = True)
                 self.tanh = nn.Tanh()
                 self.fc = nn.Linear(hidden_dim, num_classes)
-                                                
+          
         def forward(self, x):
                 # Set initial hidden and cell states
                 h0 = torch.zeros(self.num_layers, x.size(0), self.hidden_dim).to(device) 

@@ -9,30 +9,31 @@ import math
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
-dsaver = MSDATA('save', 'shoulder_result_correction.txt')
+dsaver = MSDATA('save', 'result.txt')
 
 ## Data processing
 FEATURE = ['right_shoulder_ang_x', 'right_shoulder_ang_y', 'right_shoulder_ang_z',
            'right_shoulder_acc_x', 'right_shoulder_acc_y', 'right_shoulder_acc_z',
-           'left_shoulder_ang_x', 'left_shoulder_ang_y', 'left_shoulder_ang_z',
-           'left_shoulder_acc_x', 'left_shoulder_acc_y', 'left_shoulder_acc_z']
+            'left_shoulder_ang_x',  'left_shoulder_ang_y',  'left_shoulder_ang_z',
+            'left_shoulder_acc_x',  'left_shoulder_acc_y',  'left_shoulder_acc_z']
 
-# LABEL = ['right_q', 'left_q']
 LABEL = ['Label']
 
-TESTSET  = 'data/shoulder/MShoulder.csv'
-
-WINDOW = 100
+TESTSET  = 'data/test/test1.csv'
+# TESTSET  = 'data/test/test2.csv'
+# TESTSET  = 'data/test/test3.csv'
 
 csv_reader = pd.read_csv(TESTSET, encoding='utf-8')
 feature = pd.DataFrame(csv_reader, columns=FEATURE).to_numpy().astype(float)
 label = pd.DataFrame(csv_reader, columns=LABEL).to_numpy().astype(float)
 
+WINDOW = 100
+
 ## Network parameters
 input_dim = len(FEATURE)
-hidden_dim = 256
+hidden_dim = 128
 sequence_length = WINDOW   # 1 sec
-num_classes = 100     
+num_classes = 101     
 num_layers = 3
 
 learning_rate = 0.001
@@ -43,7 +44,7 @@ batch_size = 256
 model = GaitLSTM(input_dim, hidden_dim, num_layers, num_classes).to(device)
 
 ## Load model
-model_state_dict = torch.load('shoulder_model.pt', map_location=device)
+model_state_dict = torch.load('model.pt', map_location=device)
 model.load_state_dict(model_state_dict)
 model.to(device)
 

@@ -2,33 +2,28 @@ clc
 clear all
 close all
 
-A= readmatrix('data/shoul_result.txt');
-% B= readmatrix('data/chest_result_correction.txt');
-
-t = 1:1:size(A,1);
-t = t*0.01;
-
+A = readmatrix('result.txt');
+B = readtable('./test/test1.csv', 'Format', 'auto');
+B = table2array(B);
+B_time = [133:1:length(B)]'
 figure()
 fontsize(100,"points")
 
-% title('chest')
-subplot(4,2,[1,2,3,4])
-plot(t, A(:,1), 'b', LineWidth=2)
+subplot(2,1,1)
+plot(A(:,1), 'r', LineWidth=2.0)
 hold on
-plot(t, A(:,2), 'k-.', LineWidth=1.5)
+plot(A(:,2), 'k--', LineWidth=2.0)
 legend(["output", "label"], "FontSize", 25);
 xlabel('time(s)',"FontSize",25);
 ylabel('percent gait (%)',"FontSize",25)
-% xlim([0, 10])
-% set(gca,"FontSize",20)
-% title("Taget Joint Position Estimation", "FontSize", 40);
-subplot(4,2,[5,6,7,8])
-plot(t, A(:,3), 'b-', LineWidth=2)
-legend(["error"], "FontSize", 25)
-xlabel('time(s)',"FontSize",25);
-ylabel('error (%)',"FontSize",25)
-% subplot(4,2,[7,8])
-% plot(t, B(:,3), 'b-', LineWidth=1.5)
-% legend(["error correction"], "FontSize", 25);
-% xlabel('time(s)',"FontSize",25);
-% ylabel('error (%)',"FontSize",25)
+subplot(2,1,2)
+plot(B(:,5), LineWidth=2.0)
+hold on
+plot(B(:,6), LineWidth=2.0)
+plot(B(:,7), LineWidth=2.0)
+plot(B(:,8), LineWidth=2.0)
+plot(B(:,9), LineWidth=2.0)
+plot(B(:,10), LineWidth=2.0)
+xlim([133 length(B)])
+legend()
+% plot(t, B(:,2), 'k-.', LineWidth=2.0)

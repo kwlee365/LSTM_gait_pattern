@@ -10,31 +10,46 @@ from torch.utils.data import TensorDataset
 from torch.utils.data import DataLoader 
 from utils import sequence_data_generator as SeqDataGenerator
 from gait_lstm import GaitLSTM
+from data import MSDATA
+
+dsaver = MSDATA('save', 'loss.txt')
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print("device: ", device)
 
 ## Data processing
-FEATURE = ['right_back_ang_x', 'right_back_ang_y', 'right_back_ang_z',
-           'right_back_acc_x', 'right_back_acc_y', 'right_back_acc_z',
-           'left_back_ang_x', 'left_back_ang_y', 'left_back_ang_z',
-           'left_back_acc_x', 'left_back_acc_y', 'left_back_acc_z']
+FEATURE = ['right_shoulder_ang_x', 'right_shoulder_ang_y', 'right_shoulder_ang_z',
+           'right_shoulder_acc_x', 'right_shoulder_acc_y', 'right_shoulder_acc_z',
+            'left_shoulder_ang_x',  'left_shoulder_ang_y',  'left_shoulder_ang_z',
+            'left_shoulder_acc_x',  'left_shoulder_acc_y',  'left_shoulder_acc_z']
 
 LABEL = ['Label']
 
-TRAINSET = ['data/back/KBack.csv',
-            'data/back/DBack.csv',
-            'data/back/JBack.csv',
-            'data/back/CBack.csv']
-TESTSET  = 'data/back/MBack.csv'
+TRAINSET = ['data/train/train1.csv',
+            'data/train/train2.csv',
+            'data/train/train3.csv',
+            'data/train/train4.csv',
+            'data/train/train5.csv',
+            'data/train/train6.csv',
+            'data/train/train7.csv',
+            'data/train/train8.csv',
+            'data/train/train9.csv',
+            'data/train/train10.csv',
+            'data/train/train11.csv',
+            'data/train/train12.csv',
+            'data/train/train13.csv',
+            'data/train/train14.csv']
+
+TESTSET  =  ['data/test/test1.csv']
+             
 
 WINDOW = 100
 
 ## Network parameters
 input_dim = len(FEATURE)
-hidden_dim = 256
-sequence_length = WINDOW   # 5 sec
-num_classes = 100     
+hidden_dim = 128
+sequence_length = WINDOW   # 1 sec
+num_classes = 101     
 num_layers = 3
 
 learning_rate = 0.001
@@ -44,14 +59,27 @@ batch_size = 256
 
 # Datasets
 
-X_train1, Y_train1 = SeqDataGenerator.dataset_generator(TRAINSET[0], FEATURE, LABEL, WINDOW)
-X_train2, Y_train2 = SeqDataGenerator.dataset_generator(TRAINSET[1], FEATURE, LABEL, WINDOW)
-X_train3, Y_train3 = SeqDataGenerator.dataset_generator(TRAINSET[2], FEATURE, LABEL, WINDOW)
-X_train4, Y_train4 = SeqDataGenerator.dataset_generator(TRAINSET[3], FEATURE, LABEL, WINDOW)
-X_train = np.concatenate((X_train1, X_train2, X_train3, X_train4), axis = 0)
-Y_train = np.concatenate((Y_train1, Y_train2, Y_train3, Y_train4), axis = 0)
+X_train_csv, Y_train_csv  = SeqDataGenerator.dataset_generator(TRAINSET[0], FEATURE, LABEL, WINDOW)
 
-X_test, Y_test = SeqDataGenerator.dataset_generator(TESTSET, FEATURE, LABEL, WINDOW)
+X_train = np.empty((0, X_train_csv.shape[1], X_train_csv.shape[2]))  
+Y_train = np.empty((0, Y_train_csv.shape[1]))    
+X_test  = np.empty((0, X_train_csv.shape[1], X_train_csv.shape[2]))  
+Y_test  = np.empty((0, Y_train_csv.shape[1]))
+
+for i in range(len(TRAINSET)):
+        X_train_csv, Y_train_csv = SeqDataGenerator.dataset_generator(TRAINSET[i], FEATURE, LABEL, WINDOW)
+        X_train = np.concatenate((X_train, X_train_csv), axis = 0)
+        Y_train = np.concatenate((Y_train, Y_train_csv), axis = 0)
+        print(Y_train.min(), Y_train.max())  
+
+
+for i in range(len(TESTSET)):
+        X_test_csv, Y_test_csv = SeqDataGenerator.dataset_generator(TESTSET[i], FEATURE, LABEL, WINDOW)
+        
+        X_test = np.concatenate((X_test, X_test_csv), axis = 0)
+        Y_test = np.concatenate((Y_test, Y_test_csv), axis = 0)
+        print(Y_test.min(), Y_test.max())  
+        
 
 X_train_tensor = torch.FloatTensor(X_train)
 X_test_tensor = torch.FloatTensor(X_test)
@@ -86,17 +114,16 @@ train_hist = np.zeros(num_epochs)
 mse_hist = np.zeros(num_epochs)
 
 best_loss = 10 ** 9 
-patience_limit = 10 
+patience_limit = 20 
 patience_check = 0 
 
 print("-------------------------------------------------")
 print("----------------------Train----------------------")
 print("-------------------------------------------------")
-print("Remember! This Network is 'back_model.pt'.!!")
 for epoch in range(num_epochs):
         avg_cost = 0
         val_loss = 0
-        # torch.autograd.set_detect_anomaly(True)
+        torch.autograd.set_detect_anomaly(True)
         
         for i, (x, labels) in enumerate(train_loader):
                 x = x.reshape(-1, sequence_length, input_dim).to(device)
@@ -114,11 +141,9 @@ for epoch in range(num_epochs):
                 avg_cost += loss/total_step
                 val_loss += loss.item()
                 
-                if (i+1) % 100 == 0: 
-                        print('Epoch [{}/{}], Step [{}/{}], Loss: {:.8f}'
-                              .format(epoch+1, num_epochs, i+1, total_step, loss.item()))
+
+        print('Epoch [{}/{}], Step [{}/{}], Loss: {:.8f}'.format(epoch+1, num_epochs, i+1, total_step, loss.item()))
                      
-                
         if val_loss > best_loss: 
                 patience_check += 1
 
@@ -130,6 +155,8 @@ for epoch in range(num_epochs):
                 patience_check = 0
                         
         train_hist[epoch] = avg_cost
+        data = '%lf\n'%(avg_cost)
+        dsaver.save(data)
         
 fig = plt.figure(figsize=(10, 4))
 plt.plot(train_hist, label="Training loss")
@@ -172,5 +199,5 @@ plt.show()
                 
 #Save the model checkpoint
 # torch.save(model, 'model.pt')
-torch.save(model.state_dict(), 'back_model.pt')
+torch.save(model.state_dict(), 'model.pt')
         

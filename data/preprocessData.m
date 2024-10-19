@@ -1,30 +1,33 @@
-
 %% Find peak point
 
 clc;
 clear all;
 close all;
 
-T1 = readtable('walking_data_4km.xlsx', 'Format', 'auto');
-T1 = table2array(T1);
+dir_name  = '.\data\txt_file\' 
+file_name = 'data20.txt'
 
-q = T1(:,1);
-right_acc = [T1(:,2) T1(:,3) T1(:,4)];
-right_gyro = [T1(:,5) T1(:,6) T1(:,7)];
-left_acc = [T1(:,8) T1(:,9) T1(:,10)];
-left_gyro = [T1(:,11) T1(:,12) T1(:,13)];
+target_dir = append(dir_name, file_name);
+
+T1 = readtable(target_dir, 'Format', 'auto');
+T1 = table2array(T1(:,[1:18]));
+
+right_q = T1(:,1);
+left_q  = T1(:,3);
+right_imu = T1(:,[5:10]);
+left_imu  = T1(:,[11:16]);
 
 figure()
-hold on
-time = [1:size(q)]';
+time = [1:size(right_q)]';
 % time = [1:5000]';
-plot(time,q(time))
-% plot(time,right_acc(time))
-% plot(time,right_acc(time))
-[TF, P] = islocalmin(q(time),'MinSeparation',70,'SamplePoints',time);
-plot(time(TF),q(TF),'*r')
+plot(time, right_q(time))
+hold on
+% plot(time,right_imu(time, 5))
+% plot(time,left_imu(time, 5))
+[TF, P] = islocalmin(right_q(time),'MinSeparation',70,'SamplePoints',time);
+plot(time(TF), right_q(TF),'*r')
 
-%% Labelling
+% Labelling
 
 k = find(TF);
 Label = zeros(length(time),1);
@@ -34,5 +37,12 @@ for i = 1:1:size(k,1)-1
     end
 end
 
-plot(time,Label)
+plot(time,Label / 100.0)
 % legend('q', 'pelv','leg', 'peak')
+
+%%
+start_time = 45
+end_time   = 1774
+elapsed_time = [start_time:1:end_time]
+
+copy = [T1(elapsed_time,[1:16]) Label(elapsed_time)]
